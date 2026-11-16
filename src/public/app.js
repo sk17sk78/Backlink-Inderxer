@@ -253,33 +253,6 @@ function showAppScreen() {
     if (currentTabId === 'tab-googlebot-live') loadCrawlerHits();
   }, 8000);
 }
-  const trialText = document.getElementById('trial-text');
-  const userDisplay = document.getElementById('user-display-name');
-
-  if (currentUser) {
-    userDisplay.textContent = currentUser.name || currentUser.email;
-    if (currentUser.isTrialActive) {
-      trialText.textContent = `${currentUser.trialDaysRemaining} Days Left in Free Trial (Unlimited)`;
-    } else {
-      trialText.textContent = `Trial Expired`;
-      trialText.parentElement.style.background = 'var(--status-danger-bg)';
-      trialText.parentElement.style.color = 'var(--status-danger)';
-    }
-  }
-
-  loadDashboardOverview();
-  loadCampaigns();
-  loadServiceAccounts();
-  loadCrawlerHits();
-
-  // Start background auto-poll every 8 seconds
-  if (autoPollTimer) clearInterval(autoPollTimer);
-  autoPollTimer = setInterval(() => {
-    if (currentTabId === 'tab-overview') loadDashboardOverview();
-    if (currentTabId === 'tab-campaigns') loadCampaigns(true);
-    if (currentTabId === 'tab-googlebot-live') loadCrawlerHits();
-  }, 8000);
-}
 
 // ================= NAVIGATION =================
 function initNavigation() {
