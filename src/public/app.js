@@ -22,6 +22,15 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     initDirectGuestSession();
   }
+
+  // If user visits /admin or #admin, open the admin login modal automatically
+  if (window.location.pathname.includes('admin') || window.location.hash.includes('admin') || window.location.search.includes('admin')) {
+    setTimeout(() => {
+      openAuthModal();
+      const emailField = document.getElementById('login-email');
+      if (emailField) emailField.value = 'admin@omniindexer.com';
+    }, 150);
+  }
 });
 
 // ================= AUTHENTICATION & DIRECT ACCESS =================
@@ -231,7 +240,12 @@ function showAppScreen() {
 
   if (currentUser) {
     userDisplay.textContent = currentUser.name || currentUser.email;
-    if (currentUser.isTrialActive) {
+    if (currentUser.role === 'admin') {
+      trialText.textContent = `👑 Super Admin (Full Access)`;
+      trialText.parentElement.style.background = 'rgba(59, 130, 246, 0.15)';
+      trialText.parentElement.style.color = '#60a5fa';
+      trialText.parentElement.style.borderColor = 'rgba(96, 165, 250, 0.4)';
+    } else if (currentUser.isTrialActive) {
       trialText.textContent = `${currentUser.trialDaysRemaining} Days Left in Free Trial (Unlimited)`;
     } else {
       trialText.textContent = `Trial Expired`;
