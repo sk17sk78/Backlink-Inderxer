@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniIndexer - Enterprise Multi-Engine Backlink Indexer</title>
+  <meta name="description" content="State-of-the-art backlink indexing platform combining Google Indexing API, Google Proxy triggers, dynamic XML sitemaps, RSS feeds, and crawler trap seed networks.">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Auth Screen Container (Hidden when logged in) -->
+  <div id="auth-screen" class="auth-wrapper" style="display: none;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h1 style="font-size: 1.5rem; margin-bottom: 0.25rem;">OmniIndexer</h1>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">Multi-Engine Backlink Indexing Engine</p>
+      <div class="trial-badge" style="margin-top: 1rem; width: 100%; justify-content: center;">
+        <span class="trial-pulse"></span>
+        30-Day Unlimited Free Trial Available
+      </div>
+    </div>
+
+    <div id="auth-alert" style="display: none; padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.85rem;"></div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label class="form-label" for="login-email">Email Address</label>
+        <input class="form-input" type="email" id="login-email" required placeholder="seo-pro@domain.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-password">Password</label>
+        <input class="form-input" type="password" id="login-password" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Sign In</button>
+      <p style="text-align: center; margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-secondary);">
+        Need an account? <a href="#" id="toggle-to-register">Start 30-Day Free Trial</a>
+      </p>
+    </form>
+
+    <form id="register-form" style="display: none;">
+      <div class="form-group">
+        <label class="form-label" for="reg-name">Full Name / Agency</label>
+        <input class="form-input" type="text" id="reg-name" required placeholder="Alex Vance">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="reg-email">Work Email</label>
+        <input class="form-input" type="email" id="reg-email" required placeholder="alex@agency.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="reg-password">Password</label>
+        <input class="form-input" type="password" id="reg-password" required minlength="6" placeholder="At least 6 characters">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Create Account & Activate 30-Day Trial</button>
+      <p style="text-align: center; margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-secondary);">
+        Already have an account? <a href="#" id="toggle-to-login">Sign In</a>
+      </p>
+    </form>
+  </div>
+
+  <!-- Main Application Container (Shown when logged in) -->
+  <div id="app-screen" class="app-container" style="display: none;">
+    <!-- Top Bar -->
+    <header class="header-bar">
+      <div class="brand-wrapper">
+        <h1 class="brand-title">OmniIndexer</h1>
+        <span class="brand-tag">v2.0 Pro</span>
+        <div id="trial-indicator" class="trial-badge">
+          <span class="trial-pulse"></span>
+          <span id="trial-text">30-Day Unlimited Trial Active</span>
+        </div>
+      </div>
+      <div class="user-profile-menu">
+        <span id="user-display-name" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;"></span>
+        <button id="btn-force-worker" class="btn btn-secondary btn-sm" title="Trigger background worker now">⚡ Run Worker</button>
+        <button id="btn-logout" class="btn btn-secondary btn-sm">Sign Out</button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="tab-overview">Overview</button>
+      <button class="tab-btn" data-tab="tab-new-campaign">+ New Campaign</button>
+      <button class="tab-btn" data-tab="tab-campaigns">Campaigns</button>
+      <button class="tab-btn" data-tab="tab-service-accounts">Google API Pool</button>
+      <button class="tab-btn" data-tab="tab-googlebot-live">Live Googlebot Activity</button>
+      <button class="tab-btn" data-tab="tab-discovery-hubs">Public Feeds & Traps</button>
+    </nav>
+
+    <!-- TAB 1: OVERVIEW -->
+    <section id="tab-overview" class="tab-content active">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total URLs Submitted</div>
+          <div class="kpi-value" id="kpi-total-urls">0</div>
+          <div class="kpi-subtext">Across all active campaigns</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Successfully Crawled</div>
+          <div class="kpi-value" id="kpi-crawled" style="color: var(--status-info);">0</div>
+          <div class="kpi-subtext">Verified crawler visits</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Indexed / Active</div>
+          <div class="kpi-value" id="kpi-indexed" style="color: var(--status-success);">0</div>
+          <div class="kpi-subtext">Confirmed search nodes</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Pending In Queue</div>
+          <div class="kpi-value" id="kpi-pending" style="color: var(--status-warning);">0</div>
+          <div class="kpi-subtext">Scheduled / drip pipeline</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Googlebot Real Hits</div>
+          <div class="kpi-value" id="kpi-bot-hits">0</div>
+          <div class="kpi-subtext">Logged bot visits on traps</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Active Service Keys</div>
+          <div class="kpi-value" id="kpi-service-keys">0</div>
+          <div class="kpi-subtext">Rotating Google Cloud keys</div>
+        </div>
+      </div>
+
+      <!-- Quick Action Card -->
+      <div class="content-card">
+        <div class="card-header-flex">
+          <div>
+            <h2 style="font-size: 1.2rem; margin-bottom: 0.25rem;">Multi-Engine Backlink Discovery Hub</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+              OmniIndexer combines all proven indexing mechanics into one automated pipeline.
+            </p>
+          </div>
+          <button class="btn btn-primary" onclick="switchTab('tab-new-campaign')">Create New Campaign</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem;">
+          <div style="background: var(--bg-elevated); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">1. Google Indexing API Pool</div>
+            <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">Rotates service account keys with automated quota management (200 URLs/day per account).</p>
+          </div>
+          <div style="background: var(--bg-elevated); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">2. Google Services Proxy Trigger</div>
+            <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">Triggers Google Translate & WebSub hubs to force instant crawler fetches.</p>
+          </div>
+          <div style="background: var(--bg-elevated); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">3. Dynamic Sitemaps & RSS Feeds</div>
+            <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">Auto-generates sitemaps and RSS 2.0 XML with automated search engine pinging.</p>
+          </div>
+          <div style="background: var(--bg-elevated); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">4. Crawler Trap Seed Hubs</div>
+            <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">Contextual HTML5 reference pages with Schema.org JSON-LD and live Googlebot tracking.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: CREATE CAMPAIGN -->
+    <section id="tab-new-campaign" class="tab-content">
+      <div class="content-card">
+        <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Launch New Indexing Campaign</h2>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem;">
+          Paste your target backlinks below. You have <strong>unlimited link submissions</strong> during your 30-day trial.
+        </p>
+
+        <form id="create-campaign-form">
+          <div class="form-group">
+            <label class="form-label" for="campaign-title">Campaign Name</label>
+            <input class="form-input" type="text" id="campaign-title" required placeholder="e.g., Guest Posts Batch #1 - SaaS Project">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="campaign-urls">Target Backlink URLs (1 per line or "URL | Keyword")</label>
+            <div class="file-dropzone" id="file-dropzone" onclick="document.getElementById('file-input').click()">
+              <input type="file" id="file-input" accept=".txt,.csv" style="display: none;">
+              <div class="file-dropzone-text">📁 Click or drag &amp; drop a <strong>.txt</strong> or <strong>.csv</strong> file to import bulk URLs</div>
+            </div>
+            <textarea class="form-textarea" id="campaign-urls" rows="8" required placeholder="https://example.com/blog/best-tools | best seo tools&#10;https://techsite.org/article-102&#10;https://medium.com/@author/guide-2026"></textarea>
+            <div class="form-help" id="urls-count-preview">0 valid URLs detected</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Active Indexing Engines</label>
+            <div class="engines-grid">
+              <label class="engine-card">
+                <input type="checkbox" name="engine" value="google_api" checked>
+                <div>
+                  <div class="engine-title">Google Indexing API Pool</div>
+                  <div class="engine-desc">Direct Service Account batch publish</div>
+                </div>
+              </label>
+
+              <label class="engine-card">
+                <input type="checkbox" name="engine" value="google_proxy" checked>
+                <div>
+                  <div class="engine-title">Google Services Proxy Trigger</div>
+                  <div class="engine-desc">Google Translate & WebSub crawler triggers</div>
+                </div>
+              </label>
+
+              <label class="engine-card">
+                <input type="checkbox" name="engine" value="rss_sitemap" checked>
+                <div>
+                  <div class="engine-title">Dynamic Sitemaps & RSS Feeds</div>
+                  <div class="engine-desc">Automated sitemap pings to Google and Bing</div>
+                </div>
+              </label>
+
+              <label class="engine-card">
+                <input type="checkbox" name="engine" value="crawler_trap" checked>
+                <div>
+                  <div class="engine-title">Crawler Trap Seed Network</div>
+                  <div class="engine-desc">Semantic HTML5 hubs with schema and bot detection</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Drip Feed Schedule</label>
+            <div class="drip-options-grid">
+              <label class="drip-card selected">
+                <input type="radio" name="dripMode" value="instant" checked>
+                <div class="drip-title">Instant Blast</div>
+                <div class="drip-desc">Process immediately</div>
+              </label>
+              <label class="drip-card">
+                <input type="radio" name="dripMode" value="drip_3d">
+                <div class="drip-title">3 Days Drip</div>
+                <div class="drip-desc">Natural pacing</div>
+              </label>
+              <label class="drip-card">
+                <input type="radio" name="dripMode" value="drip_7d">
+                <div class="drip-title">7 Days Drip</div>
+                <div class="drip-desc">Ideal for 500+ links</div>
+              </label>
+              <label class="drip-card">
+                <input type="radio" name="dripMode" value="drip_14d">
+                <div class="drip-title">14 Days Drip</div>
+                <div class="drip-desc">Maximum organic blend</div>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">
+            🚀 Start Indexing Campaign
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 3: CAMPAIGNS LIST -->
+    <section id="tab-campaigns" class="tab-content">
+      <div class="content-card">
+        <div class="card-header-flex">
+          <div>
+            <h2 style="font-size: 1.25rem; margin-bottom: 0.25rem;">Active Campaigns</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Monitor progress, crawler hits, and drill down into submitted URLs.</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadCampaigns()">🔄 Refresh</button>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Campaign Name</th>
+                <th>Total URLs</th>
+                <th>Progress & Status</th>
+                <th>Drip Mode</th>
+                <th>Created</th>
+                <th>Quick Links</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="campaigns-table-body">
+              <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading campaigns...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: SERVICE ACCOUNTS POOL -->
+    <section id="tab-service-accounts" class="tab-content">
+      <div class="content-card">
+        <div class="card-header-flex">
+          <div>
+            <h2 style="font-size: 1.25rem; margin-bottom: 0.25rem;">Google Indexing API Key Pool</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+              Upload Google Cloud Service Account JSON keys. The engine rotates through your pool and resets daily quotas (200 URLs/day per key) automatically.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="addDemoTestKey()">⚡ Add Sandbox/Demo Key</button>
+            <button class="btn btn-primary btn-sm" onclick="openKeyModal()">+ Add Service Account Key</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Client Email</th>
+                <th>Project ID</th>
+                <th>Daily Quota</th>
+                <th>Used Today</th>
+                <th>Remaining</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="keys-table-body">
+              <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">No service account keys configured yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: LIVE GOOGLEBOT ACTIVITY -->
+    <section id="tab-googlebot-live" class="tab-content">
+      <div class="content-card">
+        <div class="card-header-flex">
+          <div>
+            <h2 style="font-size: 1.25rem; margin-bottom: 0.25rem;">Live Search Crawler Log</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+              Real-time hits from Googlebot, Bingbot, and search engine crawlers landing on your seed trap hubs and dynamic sitemaps.
+            </p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadCrawlerHits()">🔄 Refresh Stream</button>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Detected Bot</th>
+                <th>Target Path</th>
+                <th>Associated Campaign</th>
+                <th>Crawler IP</th>
+                <th>User-Agent Signature</th>
+              </tr>
+            </thead>
+            <tbody id="crawler-hits-table-body">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No crawler hits recorded yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: DISCOVERY HUBS & FEEDS -->
+    <section id="tab-discovery-hubs" class="tab-content">
+      <div class="content-card">
+        <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Public Seed Hubs, Sitemaps & Feeds</h2>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem;">
+          These are the public discovery endpoints dynamically generated by OmniIndexer. Googlebot visits these endpoints to crawl your target backlinks.
+        </p>
+
+        <div id="hubs-list-container">
+          <p style="color: var(--text-muted);">Create a campaign first to view its public sitemaps and crawler trap hubs.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- MODAL: ADD SERVICE ACCOUNT KEY -->
+  <div id="key-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="card-header-flex">
+        <h3 style="margin: 0; font-size: 1.2rem;">Add Google Service Account Key</h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeKeyModal()">✕</button>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.5rem 0 1.25rem 0;">
+        Paste your Google Cloud Console Service Account JSON credentials below.
+      </p>
+
+      <form id="add-key-form">
+        <div class="form-group">
+          <label class="form-label" for="raw-json-input">Service Account JSON</label>
+          <textarea class="form-textarea" id="raw-json-input" rows="8" required placeholder='{
+  "type": "service_account",
+  "project_id": "my-seo-project-12345",
+  "private_key_id": "...",
+  "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
+  "client_email": "indexing-bot@my-seo-project-12345.iam.gserviceaccount.com"
+}'></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="key-quota-input">Daily Quota Limit (Default: 200)</label>
+          <input class="form-input" type="number" id="key-quota-input" value="200" min="1" max="5000">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeKeyModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Key to Pool</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CAMPAIGN URL DRILL-DOWN -->
+  <div id="urls-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 950px;">
+      <div class="card-header-flex">
+        <div>
+          <h3 id="urls-modal-title" style="margin: 0; font-size: 1.2rem;">Campaign URLs</h3>
+          <p id="urls-modal-subtitle" style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.25rem 0 0 0;"></p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="closeUrlsModal()">✕</button>
+      </div>
+
+      <div class="modal-filter-bar">
+        <div class="search-input-wrapper">
+          <input type="text" id="url-search-input" class="form-input" placeholder="🔍 Search URLs, anchor keywords..." style="padding: 0.45rem 0.75rem; font-size: 0.85rem;">
+        </div>
+        <div class="filter-chips">
+          <button class="filter-chip active" data-filter="all">All (<span id="count-all">0</span>)</button>
+          <button class="filter-chip" data-filter="indexed">Indexed (<span id="count-indexed">0</span>)</button>
+          <button class="filter-chip" data-filter="crawled">Crawled (<span id="count-crawled">0</span>)</button>
+          <button class="filter-chip" data-filter="queued">Queued (<span id="count-queued">0</span>)</button>
+          <button class="filter-chip" data-filter="failed">Failed (<span id="count-failed">0</span>)</button>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btn-modal-export-csv">📥 Export CSV</button>
+      </div>
+
+      <div class="table-responsive" style="margin-top: 1rem; max-height: 55vh;">
+        <table>
+          <thead>
+            <tr>
+              <th>Target URL</th>
+              <th>Status</th>
+              <th>Engine Execution</th>
+              <th>Scheduled</th>
+              <th>Last Checked</th>
+            </tr>
+          </thead>
+          <tbody id="urls-modal-table-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
