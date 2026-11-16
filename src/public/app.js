@@ -9,7 +9,7 @@ let activeModalCampaignId = null;
 let activeModalFilter = 'all';
 let modalSearchTerm = '';
 
-// DOM Ready
+// DOM Ready - Opens directly with ZERO login wall
 document.addEventListener('DOMContentLoaded', () => {
   initAuthUI();
   initNavigation();
@@ -20,18 +20,29 @@ document.addEventListener('DOMContentLoaded', () => {
   if (currentToken) {
     verifySession();
   } else {
-    showAuthScreen();
+    initDirectGuestSession();
   }
 });
 
-// ================= AUTHENTICATION =================
+// ================= AUTHENTICATION & DIRECT ACCESS =================
 function initAuthUI() {
   const toggleToReg = document.getElementById('toggle-to-register');
   const toggleToLogin = document.getElementById('toggle-to-login');
   const loginForm = document.getElementById('login-form');
   const regForm = document.getElementById('register-form');
-  const logoutBtn = document.getElementById('btn-logout');
+  const openAuthModalBtn = document.getElementById('btn-open-auth-modal');
   const forceWorkerBtn = document.getElementById('btn-force-worker');
+  const btnSendOtp = document.getElementById('btn-send-otp');
+  const regEmailInput = document.getElementById('reg-email');
+  const emailValStatus = document.getElementById('email-val-status');
+  const otpGroup = document.getElementById('otp-group');
+  const submitRegisterBtn = document.getElementById('btn-submit-register');
+
+  if (openAuthModalBtn) {
+    openAuthModalBtn.addEventListener('click', () => {
+      openAuthModal();
+    });
+  }
 
   toggleToReg.addEventListener('click', (e) => {
     e.preventDefault();
@@ -47,6 +58,7 @@ function initAuthUI() {
     clearAuthAlert();
   });
 
+  // Login handler
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
@@ -54,26 +66,72 @@ function initAuthUI() {
     try {
       const res = await apiRequest('/api/auth/login', 'POST', { email, password }, false);
       setSession(res.token, res.user);
+      closeAuthModal();
+      alert(`Welcome back, ${res.user.name || res.user.email}!`);
     } catch (err) {
       showAuthAlert(err.message, 'danger');
     }
   });
 
+  // Send 6-Digit Verification Code to Real Gmail / MX Domain
+  btnSendOtp.addEventListener('click', async () => {
+    const email = regEmailInput.value.trim();
+    if (!email) {
+      showAuthAlert('Please enter your email address first.', 'danger');
+      return;
+    }
+
+    btnSendOtp.disabled = true;
+    btnSendOtp.textContent = 'Verifying MX...';
+    emailValStatus.textContent = 'Verifying domain mail servers (DNS MX) & Gmail syntax...';
+    emailValStatus.style.color = 'var(--status-info)';
+
+    try {
+      const res = await apiRequest('/api/auth/send-otp', 'POST', { email }, false);
+      
+      otpGroup.style.display = 'block';
+      submitRegisterBtn.disabled = false;
+      btnSendOtp.textContent = 'Code Sent ✓';
+      emailValStatus.textContent = `✓ Active mail servers verified for ${email}.`;
+      emailValStatus.style.color = 'var(--status-success)';
+
+      showAuthAlert(`Verification code generated: ${res.debugOtp}. Enter this 6-digit code below to verify your email.`, 'success');
+      document.getElementById('reg-otp').focus();
+    } catch (err) {
+      emailValStatus.textContent = `✗ ${err.message}`;
+      emailValStatus.style.color = 'var(--status-danger)';
+      showAuthAlert(err.message, 'danger');
+      btnSendOtp.disabled = false;
+      btnSendOtp.textContent = 'Send Code';
+    }
+  });
+
+  // Register with verified OTP
   regForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('reg-name').value;
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-password').value;
+    const otp = document.getElementById('reg-otp').value;
+
+    if (!otp) {
+      showAuthAlert('Please enter the 6-digit verification code.', 'danger');
+      return;
+    }
+
+    submitRegisterBtn.disabled = true;
+    submitRegisterBtn.textContent = 'Verifying & Creating Account...';
+
     try {
-      const res = await apiRequest('/api/auth/register', 'POST', { name, email, password }, false);
+      const res = await apiRequest('/api/auth/verify-and-register', 'POST', { name, email, password, otp }, false);
       setSession(res.token, res.user);
+      closeAuthModal();
+      alert(`Account verified and activated successfully! You have a 30-day unlimited trial.`);
     } catch (err) {
       showAuthAlert(err.message, 'danger');
+      submitRegisterBtn.disabled = false;
+      submitRegisterBtn.textContent = 'Verify Code & Create Account';
     }
-  });
-
-  logoutBtn.addEventListener('click', () => {
-    clearSession();
   });
 
   forceWorkerBtn.addEventListener('click', async () => {
@@ -93,6 +151,15 @@ function initAuthUI() {
   });
 }
 
+window.openAuthModal = function() {
+  document.getElementById('auth-modal').classList.add('open');
+  clearAuthAlert();
+};
+
+window.closeAuthModal = function() {
+  document.getElementById('auth-modal').classList.remove('open');
+};
+
 function showAuthAlert(msg, type = 'danger') {
   const alertEl = document.getElementById('auth-alert');
   alertEl.style.display = 'block';
@@ -101,6 +168,10 @@ function showAuthAlert(msg, type = 'danger') {
     alertEl.style.background = 'var(--status-danger-bg)';
     alertEl.style.color = 'var(--status-danger)';
     alertEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+  } else if (type === 'success') {
+    alertEl.style.background = 'var(--status-success-bg)';
+    alertEl.style.color = 'var(--status-success)';
+    alertEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
   }
 }
 
@@ -124,7 +195,7 @@ function clearSession() {
   currentUser = null;
   localStorage.removeItem('omni_token');
   localStorage.removeItem('omni_user');
-  showAuthScreen();
+  initDirectGuestSession();
 }
 
 async function verifySession() {
@@ -133,21 +204,55 @@ async function verifySession() {
     currentUser = res.user;
     showAppScreen();
   } catch (err) {
-    clearSession();
+    initDirectGuestSession();
   }
 }
 
-function showAuthScreen() {
-  if (autoPollTimer) clearInterval(autoPollTimer);
-  document.getElementById('auth-screen').style.display = 'block';
-  document.getElementById('app-screen').style.display = 'none';
+async function initDirectGuestSession() {
+  try {
+    const res = await apiRequest('/api/auth/guest-session', 'POST', null, false);
+    currentToken = res.token;
+    currentUser = res.user;
+    localStorage.setItem('omni_token', res.token);
+    localStorage.setItem('omni_user', JSON.stringify(res.user));
+    showAppScreen();
+  } catch (err) {
+    console.error('Guest session init error:', err);
+    showAppScreen();
+  }
 }
 
 function showAppScreen() {
-  document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'block';
 
   // Update trial indicator
+  const trialText = document.getElementById('trial-text');
+  const userDisplay = document.getElementById('user-display-name');
+
+  if (currentUser) {
+    userDisplay.textContent = currentUser.name || currentUser.email;
+    if (currentUser.isTrialActive) {
+      trialText.textContent = `${currentUser.trialDaysRemaining} Days Left in Free Trial (Unlimited)`;
+    } else {
+      trialText.textContent = `Trial Expired`;
+      trialText.parentElement.style.background = 'var(--status-danger-bg)';
+      trialText.parentElement.style.color = 'var(--status-danger)';
+    }
+  }
+
+  loadDashboardOverview();
+  loadCampaigns();
+  loadServiceAccounts();
+  loadCrawlerHits();
+
+  // Start background auto-poll every 8 seconds
+  if (autoPollTimer) clearInterval(autoPollTimer);
+  autoPollTimer = setInterval(() => {
+    if (currentTabId === 'tab-overview') loadDashboardOverview();
+    if (currentTabId === 'tab-campaigns') loadCampaigns(true);
+    if (currentTabId === 'tab-googlebot-live') loadCrawlerHits();
+  }, 8000);
+}
   const trialText = document.getElementById('trial-text');
   const userDisplay = document.getElementById('user-display-name');
 

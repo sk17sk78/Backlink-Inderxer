@@ -9,13 +9,48 @@ import { getDatabase } from '../db/database.js';
 const router = express.Router();
 
 // ================= AUTH ROUTES =================
-router.post('/auth/register', (req, res) => {
+router.post('/auth/guest-session', (req, res) => {
+  try {
+    const session = AuthService.getOrCreateGuestSession();
+    res.json(session);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/auth/send-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email address is required.' });
+    }
+    const result = await AuthService.sendVerificationOtp(email);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.post('/auth/verify-and-register', async (req, res) => {
+  try {
+    const { name, email, password, otp } = req.body;
+    if (!name || !email || !password || !otp) {
+      return res.status(400).json({ error: 'Name, email, password, and 6-digit verification code are required.' });
+    }
+    const result = await AuthService.registerWithVerification(name, email, password, otp);
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.post('/auth/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required.' });
     }
-    const result = AuthService.register(name, email, password);
+    const result = await AuthService.register(name, email, password);
     res.status(201).json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });

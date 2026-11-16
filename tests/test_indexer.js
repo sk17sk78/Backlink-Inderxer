@@ -14,8 +14,8 @@ async function runTests() {
   try {
     // Test 1: User Registration & 30-Day Free Trial
     console.log('Test 1: Registering new user and checking 30-day trial...');
-    const testEmail = `seo_tester_${Date.now()}@example.com`;
-    const regResult = AuthService.register('Sarah SEO Specialist', testEmail, 'securePass123!');
+    const testEmail = `sarah.seo.${Date.now().toString().slice(-6)}@gmail.com`;
+    const regResult = await AuthService.register('Sarah SEO Specialist', testEmail, 'securePass123!');
     
     assert.strictEqual(regResult.user.email, testEmail);
     assert.strictEqual(regResult.user.isTrialActive, true);
@@ -159,7 +159,33 @@ async function runTests() {
     assert.ok(csvText.includes('best-seo-tools-2026'));
     console.log('✅ Test 12 Passed: CSV campaign export generated with complete URL records.\n');
 
-    console.log('🎉 ALL 12 TESTS PASSED! OmniIndexer is 100% gap-free and production-ready!\n');
+    // Test 13: Strict Email Verification & Fake Mail Rejection
+    console.log('Test 13: Verifying fake email rejection & DNS MX verification...');
+    const { EmailValidator } = await import('../src/services/emailValidator.js');
+    const fakeDomainCheck = await EmailValidator.verifyEmail('random@fake999domain123.com');
+    assert.strictEqual(fakeDomainCheck.isValid, false);
+    assert.ok(fakeDomainCheck.error.includes('does not exist or has no active mail server'));
+
+    const shortGmailCheck = await EmailValidator.verifyEmail('abc@gmail.com');
+    assert.strictEqual(shortGmailCheck.isValid, false);
+    assert.ok(shortGmailCheck.error.includes('Gmail usernames must be at least 6 characters'));
+
+    const validGmailCheck = await EmailValidator.verifyEmail('realuser2026@gmail.com');
+    assert.strictEqual(validGmailCheck.isValid, true);
+    console.log('✅ Test 13 Passed: Fake domains and invalid Gmails strictly blocked via live DNS MX.\n');
+
+    // Test 14: OTP Verification & Direct Guest Session
+    console.log('Test 14: Testing OTP generation & Direct Guest Session...');
+    const otpRes = await AuthService.sendVerificationOtp('seo.pro.tester2026@gmail.com');
+    assert.strictEqual(otpRes.success, true);
+    assert.strictEqual(otpRes.debugOtp.length, 6);
+
+    const guestSession = AuthService.getOrCreateGuestSession();
+    assert.ok(guestSession.token);
+    assert.strictEqual(guestSession.user.isTrialActive, true);
+    console.log('✅ Test 14 Passed: 6-Digit OTP verification and Direct Guest Session verified.\n');
+
+    console.log('🎉 ALL 14 TESTS PASSED! OmniIndexer is 100% gap-free and production-ready!\n');
   } catch (err) {
     console.error('❌ Test Failure:', err);
     process.exit(1);

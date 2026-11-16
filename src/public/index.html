@@ -8,56 +8,8 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <!-- Auth Screen Container (Hidden when logged in) -->
-  <div id="auth-screen" class="auth-wrapper" style="display: none;">
-    <div style="text-align: center; margin-bottom: 2rem;">
-      <h1 style="font-size: 1.5rem; margin-bottom: 0.25rem;">OmniIndexer</h1>
-      <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">Multi-Engine Backlink Indexing Engine</p>
-      <div class="trial-badge" style="margin-top: 1rem; width: 100%; justify-content: center;">
-        <span class="trial-pulse"></span>
-        30-Day Unlimited Free Trial Available
-      </div>
-    </div>
-
-    <div id="auth-alert" style="display: none; padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.85rem;"></div>
-
-    <form id="login-form">
-      <div class="form-group">
-        <label class="form-label" for="login-email">Email Address</label>
-        <input class="form-input" type="email" id="login-email" required placeholder="seo-pro@domain.com">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="login-password">Password</label>
-        <input class="form-input" type="password" id="login-password" required placeholder="••••••••">
-      </div>
-      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Sign In</button>
-      <p style="text-align: center; margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-secondary);">
-        Need an account? <a href="#" id="toggle-to-register">Start 30-Day Free Trial</a>
-      </p>
-    </form>
-
-    <form id="register-form" style="display: none;">
-      <div class="form-group">
-        <label class="form-label" for="reg-name">Full Name / Agency</label>
-        <input class="form-input" type="text" id="reg-name" required placeholder="Alex Vance">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="reg-email">Work Email</label>
-        <input class="form-input" type="email" id="reg-email" required placeholder="alex@agency.com">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="reg-password">Password</label>
-        <input class="form-input" type="password" id="reg-password" required minlength="6" placeholder="At least 6 characters">
-      </div>
-      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Create Account & Activate 30-Day Trial</button>
-      <p style="text-align: center; margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-secondary);">
-        Already have an account? <a href="#" id="toggle-to-login">Sign In</a>
-      </p>
-    </form>
-  </div>
-
-  <!-- Main Application Container (Shown when logged in) -->
-  <div id="app-screen" class="app-container" style="display: none;">
+  <!-- Main Application Container (Always open directly, zero friction) -->
+  <div id="app-screen" class="app-container">
     <!-- Top Bar -->
     <header class="header-bar">
       <div class="brand-wrapper">
@@ -69,9 +21,9 @@
         </div>
       </div>
       <div class="user-profile-menu">
-        <span id="user-display-name" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;"></span>
+        <span id="user-display-name" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;">Instant Trial User</span>
         <button id="btn-force-worker" class="btn btn-secondary btn-sm" title="Trigger background worker now">⚡ Run Worker</button>
-        <button id="btn-logout" class="btn btn-secondary btn-sm">Sign Out</button>
+        <button id="btn-open-auth-modal" class="btn btn-secondary btn-sm">👤 Account / Sign In</button>
       </div>
     </header>
 
@@ -446,6 +398,72 @@
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AUTH / ACCOUNT SWITCH & VERIFIED REGISTRATION -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="card-header-flex">
+        <h3 id="auth-modal-title" style="margin: 0; font-size: 1.2rem;">Account & Profile</h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeAuthModal()">✕</button>
+      </div>
+
+      <div id="auth-alert" style="display: none; padding: 0.75rem; border-radius: var(--radius-sm); margin: 1rem 0; font-size: 0.85rem;"></div>
+
+      <!-- Login Form -->
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email Address</label>
+          <input class="form-input" type="email" id="login-email" required placeholder="admin@omniindexer.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <input class="form-input" type="password" id="login-password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Sign In</button>
+        <p style="text-align: center; margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-secondary);">
+          New here? <a href="#" id="toggle-to-register">Register with Verified Gmail</a>
+        </p>
+      </form>
+
+      <!-- Verified Register Form -->
+      <form id="register-form" style="display: none;">
+        <div class="form-group">
+          <label class="form-label" for="reg-name">Full Name</label>
+          <input class="form-input" type="text" id="reg-name" required placeholder="e.g. John Doe">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-email">Real Gmail / Business Email</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input class="form-input" type="email" id="reg-email" required placeholder="name@gmail.com">
+            <button type="button" id="btn-send-otp" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Send Code</button>
+          </div>
+          <div id="email-val-status" class="form-help" style="font-size: 0.8rem; color: var(--text-muted);">
+            Real Gmail or domain with active MX mail servers required.
+          </div>
+        </div>
+
+        <div class="form-group" id="otp-group" style="display: none;">
+          <label class="form-label" for="reg-otp">6-Digit Verification Code</label>
+          <input class="form-input" type="text" id="reg-otp" maxlength="6" placeholder="123456" style="letter-spacing: 0.25em; font-family: var(--font-mono); font-size: 1.1rem; text-align: center;">
+          <div class="form-help">Enter the 6-digit code generated for your email.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-password">Password</label>
+          <input class="form-input" type="password" id="reg-password" required minlength="6" placeholder="At least 6 characters">
+        </div>
+
+        <button type="submit" id="btn-submit-register" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" disabled>
+          Verify Code &amp; Create Account
+        </button>
+
+        <p style="text-align: center; margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-secondary);">
+          Already have an account? <a href="#" id="toggle-to-login">Sign In</a>
+        </p>
+      </form>
     </div>
   </div>
 

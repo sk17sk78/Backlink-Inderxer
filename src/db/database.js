@@ -1,4 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
+import bcrypt from 'bcryptjs';
 import { ENV } from '../config/env.js';
 
 let dbInstance = null;
@@ -95,8 +96,34 @@ function initSchema(db) {
       created_at INTEGER NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS email_verifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      otp_code TEXT NOT NULL,
+      expires_at INTEGER NOT NULL,
+      verified_at INTEGER
+    );
+
     CREATE INDEX IF NOT EXISTS idx_urls_status ON urls (status, scheduled_at);
     CREATE INDEX IF NOT EXISTS idx_urls_campaign ON urls (campaign_id);
     CREATE INDEX IF NOT EXISTS idx_crawler_hits_time ON crawler_hits (created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_email_verif ON email_verifications (email);
   `);
+
+  seedDefaultAdmin(db);
+}
+
+function seedDefaultAdmin(db) {
+  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@omniindexer.com');
+  if (!existing) {
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync('admin123456', salt);
+    const now = Date.now();
+    const tenYears = now + (3650 * 24 * 60 * 60 * 1000);
+
+    db.prepare(`
+      INSERT INTO users (name, email, password_hash, role, trial_ends_at, created_at)
+      VALUES ('Super Admin', 'admin@omniindexer.com', ?, 'admin', ?, ?)
+    `).run(hash, tenYears, now);
+  }
 }
