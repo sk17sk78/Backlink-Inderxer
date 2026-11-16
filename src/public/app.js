@@ -9,6 +9,56 @@ let activeModalCampaignId = null;
 let activeModalFilter = 'all';
 let modalSearchTerm = '';
 
+// ================= GLOBAL NAVIGATION & MODAL HANDLERS (IMMEDIATELY AVAILABLE) =================
+window.switchTab = function(tabId) {
+  currentTabId = tabId;
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+  });
+
+  document.querySelectorAll('.tab-content').forEach(section => {
+    section.classList.toggle('active', section.id === tabId);
+  });
+
+  if (tabId === 'tab-overview') loadDashboardOverview();
+  if (tabId === 'tab-campaigns') loadCampaigns();
+  if (tabId === 'tab-service-accounts') loadServiceAccounts();
+  if (tabId === 'tab-googlebot-live') loadCrawlerHits();
+  if (tabId === 'tab-discovery-hubs') renderDiscoveryHubs();
+};
+
+window.openAuthModal = function() {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.classList.add('open');
+  clearAuthAlert();
+};
+
+window.closeAuthModal = function() {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.classList.remove('open');
+};
+
+window.runWorkerNow = async function() {
+  const forceWorkerBtn = document.getElementById('btn-force-worker');
+  if (forceWorkerBtn) {
+    forceWorkerBtn.disabled = true;
+    forceWorkerBtn.textContent = '⏳ Processing...';
+  }
+  try {
+    const res = await apiRequest('/api/worker/run-now', 'POST');
+    alert(`Worker triggered! Processed ${res.processedCount} queued URLs.`);
+    loadDashboardOverview();
+    loadCampaigns();
+  } catch (err) {
+    alert(`Worker trigger error: ${err.message}`);
+  } finally {
+    if (forceWorkerBtn) {
+      forceWorkerBtn.disabled = false;
+      forceWorkerBtn.textContent = '⚡ Run Worker';
+    }
+  }
+};
+
 // DOM Ready - Opens directly with ZERO login wall
 document.addEventListener('DOMContentLoaded', () => {
   initAuthUI();
@@ -278,23 +328,6 @@ function initNavigation() {
     });
   });
 }
-
-window.switchTab = function(tabId) {
-  currentTabId = tabId;
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
-  });
-
-  document.querySelectorAll('.tab-content').forEach(section => {
-    section.classList.toggle('active', section.id === tabId);
-  });
-
-  if (tabId === 'tab-overview') loadDashboardOverview();
-  if (tabId === 'tab-campaigns') loadCampaigns();
-  if (tabId === 'tab-service-accounts') loadServiceAccounts();
-  if (tabId === 'tab-googlebot-live') loadCrawlerHits();
-  if (tabId === 'tab-discovery-hubs') renderDiscoveryHubs();
-};
 
 // ================= DASHBOARD OVERVIEW =================
 async function loadDashboardOverview() {
