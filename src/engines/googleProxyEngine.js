@@ -13,7 +13,7 @@ export class GoogleProxyEngine {
     try {
       const translateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(url)}`;
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6000);
+      const timeout = setTimeout(() => controller.abort(), 3500);
 
       const res = await fetch(translateUrl, {
         method: 'GET',
@@ -39,7 +39,7 @@ export class GoogleProxyEngine {
     // 2. WebSub / PubSubHubbub Google AppSpot Ping
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6000);
+      const timeout = setTimeout(() => controller.abort(), 3500);
 
       const hubRes = await fetch('https://pubsubhubbub.appspot.com', {
         method: 'POST',

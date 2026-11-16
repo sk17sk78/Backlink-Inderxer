@@ -17,7 +17,7 @@ export class VerificationEngine {
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 7000);
+      const timeout = setTimeout(() => controller.abort(), 4000);
 
       const res = await fetch(url, {
         method: 'GET',

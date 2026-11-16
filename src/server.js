@@ -29,7 +29,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static files (frontend)
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { dotfiles: 'allow' }));
 
 // Public crawlers & sitemaps
 app.use('/public', publicRoutes);
@@ -37,16 +37,25 @@ app.use('/public', publicRoutes);
 // Protected REST API
 app.use('/api', apiRoutes);
 
+// Direct /admin route convenience
+app.get('/admin', (req, res) => {
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  res.sendFile(indexPath, { dotfiles: 'allow' }, (err) => {
+    if (err) {
+      res.type('html').send(fs.readFileSync(indexPath, 'utf8'));
+    }
+  });
+});
+
 // SPA fallback
 app.use((req, res, next) => {
   if (req.method !== 'GET') return next();
   if (req.path.startsWith('/api') || req.path.startsWith('/public')) {
     return res.status(404).json({ error: 'Endpoint not found' });
   }
-  const publicDir = path.join(__dirname, 'public');
-  res.sendFile('index.html', { root: publicDir }, (err) => {
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  res.sendFile(indexPath, { dotfiles: 'allow' }, (err) => {
     if (err) {
-      const indexPath = path.join(publicDir, 'index.html');
       res.type('html').send(fs.readFileSync(indexPath, 'utf8'));
     }
   });

@@ -2,6 +2,8 @@ import crypto from 'node:crypto';
 import { getDatabase } from '../db/database.js';
 
 export class GoogleApiEngine {
+  static tokenCache = new Map();
+
   /**
    * Generates a signed OAuth2 JWT for Google Service Account without external dependencies.
    */
@@ -34,9 +36,16 @@ export class GoogleApiEngine {
   }
 
   /**
-   * Exchanges Service Account JWT for a bearer access token.
+   * Exchanges Service Account JWT for a bearer access token with in-memory caching.
    */
   static async getAccessToken(clientEmail, privateKey) {
+    const cacheKey = clientEmail;
+    const cached = this.tokenCache.get(cacheKey);
+    // Reuse cached token if valid for more than 5 minutes
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.token;
+    }
+
     const jwt = this.generateServiceAccountJwt(clientEmail, privateKey);
     const res = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -53,6 +62,11 @@ export class GoogleApiEngine {
     }
 
     const data = await res.json();
+    const expiresIn = (data.expires_in || 3600) - 300; // 5 min safety buffer
+    this.tokenCache.set(cacheKey, {
+      token: data.access_token,
+      expiresAt: Date.now() + Math.max(expiresIn, 60) * 1000
+    });
     return data.access_token;
   }
 

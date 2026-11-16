@@ -15,6 +15,6 @@ export const ENV = {
   JWT_SECRET: process.env.JWT_SECRET || 'omni_indexer_ultra_secure_jwt_secret_key_2026',
   DB_PATH: process.env.DB_PATH || path.join(projectRoot, 'omni_indexer.sqlite'),
   TRIAL_DAYS: 30,
-  WORKER_INTERVAL_MS: parseInt(process.env.WORKER_INTERVAL_MS || '3000', 10),
-  BATCH_SIZE: parseInt(process.env.BATCH_SIZE || '15', 10)
+  WORKER_INTERVAL_MS: parseInt(process.env.WORKER_INTERVAL_MS || '1000', 10),
+  BATCH_SIZE: parseInt(process.env.BATCH_SIZE || '50', 10)
 };
