@@ -1,4 +1,5 @@
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
@@ -42,7 +43,13 @@ app.use((req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/public')) {
     return res.status(404).json({ error: 'Endpoint not found' });
   }
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const publicDir = path.join(__dirname, 'public');
+  res.sendFile('index.html', { root: publicDir }, (err) => {
+    if (err) {
+      const indexPath = path.join(publicDir, 'index.html');
+      res.type('html').send(fs.readFileSync(indexPath, 'utf8'));
+    }
+  });
 });
 
 // Start background worker
