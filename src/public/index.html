@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OmniIndexer - Enterprise Multi-Engine Backlink Indexer</title>
   <meta name="description" content="State-of-the-art backlink indexing platform combining Google Indexing API, Google Proxy triggers, dynamic XML sitemaps, RSS feeds, and crawler trap seed networks.">
-  <link rel="stylesheet" href="/style.css?v=2.5.0">
+  <link rel="stylesheet" href="/style.css?v=3.0.0">
 </head>
 <body>
   <!-- Main Application Container (Always open directly, zero friction) -->
@@ -21,20 +21,20 @@
         </div>
       </div>
       <div class="user-profile-menu">
-        <span id="user-display-name" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;">Instant Trial User</span>
+        <span id="user-display-name" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 600;">Instant Trial User</span>
         <button id="btn-force-worker" class="btn btn-secondary btn-sm" title="Trigger background worker now" onclick="runWorkerNow()">⚡ Run Worker</button>
         <button id="btn-open-auth-modal" class="btn btn-secondary btn-sm" onclick="openAuthModal()">👤 Account / Sign In</button>
       </div>
     </header>
 
-    <!-- Navigation Tabs -->
+    <!-- Navigation Tabs with 3D Pill Design & Icons -->
     <nav class="nav-tabs" role="tablist">
-      <button class="tab-btn active" data-tab="tab-overview" onclick="switchTab('tab-overview')">Overview</button>
-      <button class="tab-btn" data-tab="tab-new-campaign" onclick="switchTab('tab-new-campaign')">+ New Campaign</button>
-      <button class="tab-btn" data-tab="tab-campaigns" onclick="switchTab('tab-campaigns')">Campaigns</button>
-      <button class="tab-btn" data-tab="tab-service-accounts" onclick="switchTab('tab-service-accounts')">Google API Pool</button>
-      <button class="tab-btn" data-tab="tab-googlebot-live" onclick="switchTab('tab-googlebot-live')">Live Googlebot Activity</button>
-      <button class="tab-btn" data-tab="tab-discovery-hubs" onclick="switchTab('tab-discovery-hubs')">Public Feeds & Traps</button>
+      <button class="tab-btn active" data-tab="tab-overview" onclick="switchTab('tab-overview')">📊 Overview</button>
+      <button class="tab-btn" data-tab="tab-new-campaign" onclick="switchTab('tab-new-campaign')">🚀 New Campaign</button>
+      <button class="tab-btn" data-tab="tab-campaigns" onclick="switchTab('tab-campaigns')">📑 Campaigns</button>
+      <button class="tab-btn" data-tab="tab-service-accounts" onclick="switchTab('tab-service-accounts')">🔑 Google API Pool</button>
+      <button class="tab-btn" data-tab="tab-googlebot-live" onclick="switchTab('tab-googlebot-live')">📡 Live Googlebot Activity</button>
+      <button class="tab-btn" data-tab="tab-discovery-hubs" onclick="switchTab('tab-discovery-hubs')">🌐 Public Feeds &amp; Traps</button>
     </nav>
 
     <!-- TAB 1: OVERVIEW -->
@@ -467,6 +467,6 @@
     </div>
   </div>
 
-  <script src="/app.js?v=2.5.0"></script>
+  <script src="/app.js?v=3.0.0"></script>
 </body>
 </html>
